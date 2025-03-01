@@ -3,7 +3,7 @@ import type { InsuranceParams } from "./types"
 export const DEFAULT_TAX_RATE = 0.2 // 20%
 export const DEFAULT_TARGET_SP_RATIO = 0.4 // 40%
 export const DEFAULT_INFLATION_RATE = 0.03 // 3%
-export const DEFAULT_PREMIUM_PER_SQM = 0.9 // 0.90€
+export const DEFAULT_PREMIUM_PER_SQM = 0.6 // 0.60€ - Modifié de 0.90€ pour ajuster la prime par défaut
 export const DEFAULT_TOTAL_SURFACE = 1000000 // 1,000,000 m²
 export const DEFAULT_DEDUCTIBLE = 9000 // 9,000€
 

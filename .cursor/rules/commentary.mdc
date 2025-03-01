@@ -1,0 +1,87 @@
+---
+description: Used to create commentary
+globs: 
+alwaysApply: true
+---
+
+# Meilleures Pratiques pour les Commentaires de Code
+
+## Objectifs des Commentaires
+
+Les commentaires doivent servir à:
+- Expliquer **pourquoi** le code existe (et non pas **comment** il fonctionne)
+- Documenter les décisions architecturales importantes
+- Clarifier les sections complexes ou non intuitives
+- Fournir du contexte que le code seul ne peut pas exprimer
+
+## Types de Commentaires
+
+### 1. Commentaires de Documentation (JSDoc, PHPDoc, etc.)
+```javascript
+/**
+ * Calcule le montant de la prime d'assurance.
+ * @param {number} baseAmount - Le montant de base
+ * @param {number} coefficient - Le coefficient multiplicateur
+ * @param {Object} options - Options supplémentaires
+ * @returns {number} Le montant final de la prime
+ */
+function calculatePremium(baseAmount, coefficient, options) {
+    // ...
+}
+```
+
+### 2. Commentaires d'Explication
+```javascript
+// On utilise une approche progressive pour éviter les pics de charge serveur
+// lors du traitement de grands volumes de données
+function processLargeDataset() {
+    // ...
+}
+```
+
+### 3. Commentaires TODO/FIXME
+```javascript
+// TODO: Optimiser cette fonction pour de meilleures performances
+// FIXME: Corriger le bug #1234 lié au calcul des taxes
+```
+
+## Quand Utiliser des Commentaires
+
+✅ **À faire:**
+- Documenter les API publiques et les interfaces
+- Expliquer les algorithmes complexes
+- Clarifier les décisions non évidentes ("pourquoi on a fait comme ça")
+- Signaler les limitations connues ou les cas particuliers
+- Documenter les workarounds temporaires
+
+❌ **À éviter:**
+- Commenter du code évident
+- Répéter ce que le code fait déjà clairement
+- Laisser des commentaires obsolètes
+- Utiliser des commentaires pour masquer du code de mauvaise qualité
+
+## Conseils pour l'IA
+
+Lors de la génération ou de l'analyse de code:
+1. Privilégier un code auto-documenté avec des noms de variables et fonctions explicites
+2. Ajouter des commentaires uniquement lorsqu'ils apportent une réelle valeur
+3. Pour les API ou fonctions complexes, utiliser des formats de documentation standardisés
+4. Suggérer la suppression des commentaires redondants ou obsolètes
+5. Maintenir la cohérence du style de commentaires dans tout le projet
+
+## Exemples Concrets
+
+### Mauvais Commentaire
+```javascript
+// Incrémente i de 1
+i++;
+```
+
+### Bon Commentaire
+```javascript
+// On utilise une approche itérative plutôt que récursive pour éviter 
+// les dépassements de pile avec de grands ensembles de données
+for (let i = 0; i < largeDataset.length; i++) {
+    // ...
+}
+```

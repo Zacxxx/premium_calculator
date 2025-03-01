@@ -39,12 +39,12 @@ const SIMULATION_STEPS: Step[] = [
 
 export default function InsuranceSimulator() {
   const { toast } = useToast()
-  const { params, results, errors, isCalculating, updateParams, resetParams, saveParams, loadParams } = useSimulation()
+  const { params, results, errors, isCalculating, updateParams, resetParams, saveParams, loadParams, recalculate } = useSimulation()
 
-  const [activeTab, setActiveTab] = React.useState("simulator")
   const [currentStep, setCurrentStep] = React.useState(0)
   const debouncedParams = useDebounce(params)
   const [lastSavedParams, saveParamsToStorage] = useLocalStorage("lastSavedParams", null)
+  const [defaultResultsCalculated, setDefaultResultsCalculated] = React.useState(false)
 
   // Performance tracking
   React.useEffect(() => {
@@ -55,13 +55,25 @@ export default function InsuranceSimulator() {
     }
   }, [])
 
-  // Load params on mount
+  // Load params on mount and calculate default results
   React.useEffect(() => {
     const metricName = "loadParams"
     performanceMonitor.start(metricName)
     try {
+      // Réinitialiser les paramètres pour utiliser la nouvelle valeur par défaut
+      resetParams()
+      debug.log("Parameters reset to new defaults")
+      
+      // Ensuite charger les paramètres sauvegardés (si disponibles)
       loadParams()
       debug.log("Parameters loaded successfully")
+      
+      // Calculer les résultats par défaut si aucun résultat n'est disponible
+      if (!results && !isCalculating && !defaultResultsCalculated) {
+        debug.log("Calculating default results")
+        recalculate()
+        setDefaultResultsCalculated(true)
+      }
     } catch (error) {
       debug.error("Error loading parameters:", error)
       toast({
@@ -72,7 +84,7 @@ export default function InsuranceSimulator() {
     } finally {
       performanceMonitor.end(metricName)
     }
-  }, [loadParams, toast])
+  }, [loadParams, toast, results, isCalculating, defaultResultsCalculated, recalculate, resetParams])
 
   // Update step based on state
   React.useEffect(() => {
@@ -84,13 +96,6 @@ export default function InsuranceSimulator() {
       setCurrentStep(2)
     }
   }, [errors, isCalculating, results])
-
-  // Auto-switch to results tab
-  React.useEffect(() => {
-    if (results && !isCalculating && !Object.keys(errors).length) {
-      setActiveTab("results")
-    }
-  }, [results, isCalculating, errors])
 
   // Cache results
   React.useEffect(() => {
@@ -166,7 +171,7 @@ export default function InsuranceSimulator() {
     try {
       resetParams()
       setCurrentStep(0)
-      setActiveTab("simulator")
+      setDefaultResultsCalculated(false)
       cache.clear()
       toast({
         title: "Succès",
@@ -193,57 +198,44 @@ export default function InsuranceSimulator() {
           <StepIndicator steps={SIMULATION_STEPS} currentStep={currentStep} />
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="simulator">Simulateur</TabsTrigger>
-            <TabsTrigger value="results" disabled={!results || isCalculating}>
-              Résultats
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex justify-end gap-2 mb-4">
+          <Button variant="outline" size="sm" onClick={handleReset}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Réinitialiser
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSaveParameters}>
+            <Save className="h-4 w-4 mr-2" />
+            Sauvegarder
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportResults} disabled={!results}>
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
+        </div>
 
-          <div className="flex justify-end gap-2 mb-4">
-            <Button variant="outline" size="sm" onClick={handleReset}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Réinitialiser
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleSaveParameters}>
-              <Save className="h-4 w-4 mr-2" />
-              Sauvegarder
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportResults} disabled={!results}>
-              <Download className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
-          </div>
+        {/* Section du simulateur */}
+        <div className="space-y-6 mb-8">
+          <h2 className="text-xl font-semibold">Simulateur</h2>
+          {isCalculating ? (
+            <LoadingState />
+          ) : (
+            <InputParameters params={params} onChange={updateParams} errors={errors} />
+          )}
+        </div>
 
-          <TabsContent value="simulator" className="space-y-6">
-            {isCalculating ? (
-              <LoadingState />
-            ) : (
-              <InputParameters params={params} onChange={updateParams} errors={errors} />
-            )}
-            <div className="flex justify-end mt-4">
-              <Button
-                onClick={() => setActiveTab("results")}
-                disabled={!results || isCalculating || Object.keys(errors).length > 0}
-              >
-                Voir les résultats
-              </Button>
+        {/* Section des résultats */}
+        <div className="mt-8 pt-8 border-t border-border">
+          <h2 className="text-xl font-semibold mb-6">Résultats</h2>
+          {isCalculating ? (
+            <LoadingState />
+          ) : results ? (
+            <ResultsDisplay results={results} params={params} />
+          ) : (
+            <div className="text-center py-6 bg-muted/50 rounded-md">
+              <p className="text-muted-foreground">Calcul des résultats en cours...</p>
             </div>
-          </TabsContent>
-
-          <TabsContent value="results">
-            {isCalculating ? (
-              <LoadingState />
-            ) : results ? (
-              <ResultsDisplay results={results} params={params} />
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-muted-foreground">Aucun résultat disponible. Veuillez vérifier vos paramètres.</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       </Card>
     </ErrorBoundary>
   )
