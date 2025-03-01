@@ -11,7 +11,7 @@ export const config = {
     locale: "fr-FR",
   },
   validation: {
-    debounceMs: 500,
+    debounceMs: 1000,
     maxRetries: 3,
     timeoutMs: 5000,
   },

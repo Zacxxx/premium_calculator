@@ -97,23 +97,49 @@ export function parseNumber(value: string, options: NumberFormatOptions = {}): n
   const { allowNegative = true } = options
 
   try {
-    // Remove all non-numeric characters except decimal point and minus sign
+    // Gérer le cas des chaînes vides
+    if (!value || value.trim() === '') {
+      return null;
+    }
+    
+    // Traiter les pourcentages
+    if (options?.style === "percent") {
+      // Pour les entrées de pourcentage, supprimer le symbole % et les séparateurs de milliers
+      const cleanValue = value.replace(/[^\d.-]/g, "")
+      
+      // Vérifier si la valeur est un nombre valide
+      if (!/^-?\d*\.?\d*$/.test(cleanValue)) {
+        return null;
+      }
+      
+      const parsed = Number.parseFloat(cleanValue)
+      
+      // Gérer les valeurs invalides
+      if (Number.isNaN(parsed)) {
+        return null
+      }
+      
+      // Convertir le pourcentage en décimal
+      return allowNegative ? parsed / 100 : Math.max(0, parsed / 100)
+    }
+
+    // Pour les entrées non-pourcentage, supprimer tous les caractères non numériques sauf le point décimal et le signe moins
     const cleanValue = value.replace(/[^\d.-]/g, "")
-
-    // Parse the cleaned value
+    
+    // Vérifier si la valeur est un nombre valide
+    if (!/^-?\d*\.?\d*$/.test(cleanValue)) {
+      return null;
+    }
+    
     const parsed = Number.parseFloat(cleanValue)
-
-    // Handle invalid numbers
+    
+    // Gérer les valeurs invalides
     if (Number.isNaN(parsed)) {
       return null
     }
-
-    // Handle negative numbers
-    if (!allowNegative && parsed < 0) {
-      return 0
-    }
-
-    return parsed
+    
+    // Gérer les nombres négatifs
+    return allowNegative ? parsed : Math.max(0, parsed)
   } catch (error) {
     debug.error("Number parsing error:", error)
     return null

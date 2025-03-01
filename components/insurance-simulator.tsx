@@ -43,7 +43,7 @@ export default function InsuranceSimulator() {
 
   const [currentStep, setCurrentStep] = React.useState(0)
   const debouncedParams = useDebounce(params)
-  const [lastSavedParams, saveParamsToStorage] = useLocalStorage("lastSavedParams", null)
+  const [lastSavedParams, saveParamsToStorage] = useLocalStorage<string | null>("lastSavedParams", null)
   const [defaultResultsCalculated, setDefaultResultsCalculated] = React.useState(false)
 
   // Performance tracking
@@ -60,11 +60,8 @@ export default function InsuranceSimulator() {
     const metricName = "loadParams"
     performanceMonitor.start(metricName)
     try {
-      // Réinitialiser les paramètres pour utiliser la nouvelle valeur par défaut
-      resetParams()
-      debug.log("Parameters reset to new defaults")
-      
-      // Ensuite charger les paramètres sauvegardés (si disponibles)
+      // Ne pas réinitialiser les paramètres à chaque montage du composant
+      // Charger d'abord les paramètres sauvegardés
       loadParams()
       debug.log("Parameters loaded successfully")
       
@@ -84,7 +81,7 @@ export default function InsuranceSimulator() {
     } finally {
       performanceMonitor.end(metricName)
     }
-  }, [loadParams, toast, results, isCalculating, defaultResultsCalculated, recalculate, resetParams])
+  }, [loadParams, toast, results, isCalculating, defaultResultsCalculated, recalculate])
 
   // Update step based on state
   React.useEffect(() => {
@@ -110,7 +107,7 @@ export default function InsuranceSimulator() {
     performanceMonitor.start(metricName)
     try {
       await saveParams()
-      saveParamsToStorage(params)
+      saveParamsToStorage(JSON.stringify(params))
       toast({
         title: "Succès",
         description: "Vos paramètres ont été sauvegardés avec succès.",
@@ -161,8 +158,8 @@ export default function InsuranceSimulator() {
         variant: "destructive",
       })
     } finally {
-      const duration = performance.now() - startTime
-      performanceMonitor.trackMetric("exportResults", duration)
+      performanceMonitor.start("exportResults")
+      performanceMonitor.end("exportResults")
     }
   }, [results, params, toast])
 
@@ -177,7 +174,7 @@ export default function InsuranceSimulator() {
         title: "Succès",
         description: "Les paramètres ont été réinitialisés aux valeurs par défaut.",
       })
-      analytics.trackEvent({ name: "parameters_reset" })
+      analytics.trackEvent({ name: "parameters_saved" })
     } catch (error) {
       debug.error("Reset error:", error)
       toast({
@@ -186,8 +183,8 @@ export default function InsuranceSimulator() {
         variant: "destructive",
       })
     } finally {
-      const duration = performance.now() - startTime
-      performanceMonitor.trackMetric("resetParameters", duration)
+      performanceMonitor.start("resetParameters")
+      performanceMonitor.end("resetParameters")
     }
   }, [resetParams, toast])
 
@@ -232,7 +229,11 @@ export default function InsuranceSimulator() {
             <ResultsDisplay results={results} params={params} />
           ) : (
             <div className="text-center py-6 bg-muted/50 rounded-md">
-              <p className="text-muted-foreground">Calcul des résultats en cours...</p>
+              <p className="text-muted-foreground">
+                {Object.keys(errors).length > 0 
+                  ? "Veuillez corriger les erreurs dans les paramètres pour voir les résultats."
+                  : "Ajustez les paramètres pour calculer les résultats."}
+              </p>
             </div>
           )}
         </div>

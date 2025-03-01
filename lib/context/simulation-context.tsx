@@ -37,6 +37,7 @@ type SimulationAction =
   | { type: "SET_ERRORS"; payload: Record<string, string> }
   | { type: "RESET_STATE" }
   | { type: "SET_CALCULATING"; payload: boolean }
+  | { type: "UPDATE_PARAMS_WITHOUT_DIRTY"; payload: Partial<InsuranceParams> }
 
 function simulationReducer(state: SimulationState, action: SimulationAction): SimulationState {
   switch (action.type) {
@@ -46,6 +47,11 @@ function simulationReducer(state: SimulationState, action: SimulationAction): Si
         params: { ...state.params, ...action.payload },
         isDirty: true,
         lastCalculation: null,
+      }
+    case "UPDATE_PARAMS_WITHOUT_DIRTY":
+      return {
+        ...state,
+        params: { ...state.params, ...action.payload },
       }
     case "SET_RESULTS":
       return {
@@ -126,7 +132,19 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
     try {
       debug.time("calculation")
       await new Promise((resolve) => setTimeout(resolve, 100))
-      const results = calculateResults(state.params)
+      
+      const cleanParams = {
+        ...state.params,
+        premiumPerSqm: Number(state.params.premiumPerSqm.toFixed(2)),
+        totalSurface: Number(state.params.totalSurface.toFixed(2)),
+        insuranceCompanyCost: Number(state.params.insuranceCompanyCost.toFixed(2)),
+        customerPaidCost: Number(state.params.customerPaidCost.toFixed(2)),
+        inflation: Number(state.params.inflation.toFixed(4)),
+        taxRate: Number(state.params.taxRate.toFixed(4)),
+        targetSPRatio: Number(state.params.targetSPRatio.toFixed(4))
+      };
+      
+      const results = calculateResults(cleanParams)
       debug.timeEnd("calculation")
 
       dispatch({ type: "SET_RESULTS", payload: results })
@@ -149,15 +167,46 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
     if (state.isDirty) {
       const timer = setTimeout(() => {
         calculateAsync()
-      }, 500)
+      }, 800)
       return () => clearTimeout(timer)
     }
   }, [state.isDirty, calculateAsync])
 
   const updateParams = React.useCallback((newParams: Partial<InsuranceParams>) => {
     debug.log("Updating params:", newParams)
-    dispatch({ type: "SET_PARAMS", payload: newParams })
-  }, [])
+    
+    const sanitizedParams: Partial<InsuranceParams> = {};
+    
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (typeof value === 'number' && !isNaN(value) && isFinite(value)) {
+        sanitizedParams[key as keyof InsuranceParams] = value;
+      } else if (value !== undefined && value !== null) {
+        sanitizedParams[key as keyof InsuranceParams] = value;
+      }
+    });
+    
+    if (Object.keys(sanitizedParams).length > 0) {
+      const shouldMarkAsDirty = Object.keys(sanitizedParams).some(key => {
+        const currentValue = state.params[key as keyof InsuranceParams];
+        const newValue = sanitizedParams[key as keyof InsuranceParams];
+        
+        if (typeof currentValue === 'number' && typeof newValue === 'number') {
+          return Math.abs(currentValue - newValue) > 0.000001;
+        }
+        
+        return currentValue !== newValue;
+      });
+      
+      if (shouldMarkAsDirty) {
+        dispatch({ type: "SET_PARAMS", payload: sanitizedParams });
+      } else {
+        dispatch({ 
+          type: "UPDATE_PARAMS_WITHOUT_DIRTY", 
+          payload: sanitizedParams 
+        });
+      }
+    }
+  }, [state.params])
 
   const resetParams = React.useCallback(() => {
     debug.log("Resetting params to defaults")

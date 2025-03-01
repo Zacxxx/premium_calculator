@@ -128,19 +128,40 @@ export function EnhancedNumberInput({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitizedValue = sanitizeInput(e.target.value)
     setLocalValue(sanitizedValue)
-
-    if (!isFocused) {
-      const parsed = parseNumber(sanitizedValue, formatOptions)
-      if (parsed !== null) {
-        updateValue(parsed)
-      }
-    }
+    
+    // Éviter les mises à jour pendant la saisie
   }
 
   const handleBlur = () => {
     setIsFocused(false)
-    const parsed = parseNumber(localValue, formatOptions)
-    updateValue(parsed)
+    
+    try {
+      // Utiliser notre fonction parseNumber personnalisée avec les options de formatage
+      const parsed = parseNumber(localValue, formatOptions)
+      
+      // Seulement mettre à jour si la valeur est valide et différente de la valeur actuelle
+      if (parsed !== null) {
+        // Vérifier si la valeur a réellement changé pour éviter des mises à jour inutiles
+        if (typeof value !== 'number' || Math.abs(parsed - value) > 0.000001) {
+          updateValue(parsed)
+        } else {
+          // Si la valeur n'a pas changé, juste reformater l'affichage
+          setLocalValue(formatNumber(value, { ...formatOptions, maximumFractionDigits: precision }))
+        }
+      } else if (required && localValue.trim() === '') {
+        // Si le champ est requis et vide, restaurer la valeur précédente
+        if (typeof value === "number") {
+          setLocalValue(formatNumber(value, { ...formatOptions, maximumFractionDigits: precision }))
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing number:", error)
+      // En cas d'erreur, restaurer la valeur précédente
+      if (typeof value === "number") {
+        setLocalValue(formatNumber(value, { ...formatOptions, maximumFractionDigits: precision }))
+      }
+    }
+    
     onBlur?.()
   }
 
@@ -200,12 +221,20 @@ export function EnhancedNumberInput({
         break
       case "Escape":
         e.preventDefault()
+        // Restaurer la valeur d'origine et perdre le focus
+        if (typeof value === "number") {
+          setLocalValue(formatNumber(value, { ...formatOptions, maximumFractionDigits: precision }))
+        } else {
+          setLocalValue("")
+        }
         inputRef.current?.blur()
         break
       case "Enter":
         e.preventDefault()
         const parsed = parseNumber(localValue, formatOptions)
-        updateValue(parsed)
+        if (parsed !== null) {
+          updateValue(parsed)
+        }
         inputRef.current?.blur()
         break
     }
