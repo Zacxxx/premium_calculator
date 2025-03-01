@@ -38,14 +38,19 @@ export default function ResultsDisplay({ results, params }: ResultsDisplayProps)
   ]
 
   // Données pour le graphique de répartition des coûts
+  // Utilisation des valeurs calculées à partir des résultats pour une représentation plus précise
+  // Multiplication par le nombre de sinistres pour obtenir le coût total
+  // Vérification que les valeurs sont des nombres valides pour éviter les erreurs de rendu
   const costDistributionData = [
     {
       name: "Coût Cie",
-      value: params.insuranceCompanyCost,
+      value: isFinite(results.averageCostPerClaimInsurance) ? 
+        results.averageCostPerClaimInsurance * params.numberOfClaims : 0,
     },
     {
       name: "Coût client",
-      value: params.customerPaidCost,
+      value: isFinite(results.averageCostPerClaimCustomer) ? 
+        results.averageCostPerClaimCustomer * params.numberOfClaims : 0,
     },
   ]
 
@@ -134,26 +139,32 @@ export default function ResultsDisplay({ results, params }: ResultsDisplayProps)
                 <CardTitle>Répartition des coûts des sinistres</CardTitle>
               </CardHeader>
               <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={costDistributionData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {costDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [`${formatNumber(Number(value))} €`, "Montant"]} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                {costDistributionData.every(item => item.value === 0) ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">Aucune donnée disponible</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={costDistributionData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {costDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${formatNumber(Number(value))} €`, "Montant"]} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </div>

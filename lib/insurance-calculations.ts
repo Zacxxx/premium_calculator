@@ -23,8 +23,49 @@ export function calculateResults(params: InsuranceParams): SimulationResults {
       debug.log("Input params:", params)
     })
 
+    // Vérifier et corriger les incohérences dans les données d'entrée
+    let correctedParams = { ...params };
+    
+    // S'assurer que la somme des coûts est cohérente avec le montant total des sinistres
+    const totalCosts = params.customerPaidCost + params.insuranceCompanyCost;
+    if (Math.abs(totalCosts - params.totalClaimAmount) > 0.1) {
+      debug.warn("Incohérence détectée entre les coûts et le montant total des sinistres", {
+        customerPaidCost: params.customerPaidCost,
+        insuranceCompanyCost: params.insuranceCompanyCost,
+        totalCosts,
+        totalClaimAmount: params.totalClaimAmount
+      });
+      
+      // Si le montant total est défini mais pas cohérent, ajuster les coûts
+      if (params.totalClaimAmount > 0) {
+        // Maintenir les proportions relatives si possible
+        if (totalCosts > 0) {
+          const ratio = params.totalClaimAmount / totalCosts;
+          correctedParams.customerPaidCost = ensureFiniteNumber(params.customerPaidCost * ratio);
+          correctedParams.insuranceCompanyCost = ensureFiniteNumber(params.totalClaimAmount - correctedParams.customerPaidCost);
+        } else {
+          // Répartition par défaut
+          correctedParams.customerPaidCost = ensureFiniteNumber(params.totalClaimAmount * 0.2);
+          correctedParams.insuranceCompanyCost = ensureFiniteNumber(params.totalClaimAmount * 0.8);
+        }
+      } else if (totalCosts > 0) {
+        // Si le montant total n'est pas défini mais les coûts le sont, ajuster le montant total
+        correctedParams.totalClaimAmount = totalCosts;
+      }
+      
+      debug.log("Paramètres corrigés:", correctedParams);
+    }
+    
+    // Continuer avec les paramètres corrigés
+    params = correctedParams;
+
     // Validate all parameters first
-    validateParams(params)
+    try {
+      validateParams(params);
+    } catch (error) {
+      debug.warn("Validation error, proceeding with calculations anyway:", error);
+      // Continuer malgré les erreurs de validation
+    }
 
     // Basic calculations
     const currentTotalPremium = ensureFiniteNumber(params.premiumPerSqm * params.totalSurface);

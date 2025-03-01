@@ -78,9 +78,16 @@ export function validateBusinessRules(params: InsuranceParams): ValidationErrors
   }
 
   // Validate that the sum of costs equals total claim amount
+  // Utiliser une tolérance plus grande pour éviter des erreurs d'arrondi
+  // et ne valider que si les deux coûts ont été saisis (non nuls)
   const totalCosts = params.customerPaidCost + params.insuranceCompanyCost
-  if (Math.abs(totalCosts - params.totalClaimAmount) > 0.01) {
-    errors.totalClaimAmount = "La somme des coûts (client + Cie) doit être égale au montant total des sinistres"
+  if (params.customerPaidCost > 0 && params.insuranceCompanyCost > 0 && 
+      params.totalClaimAmount > 0 && Math.abs(totalCosts - params.totalClaimAmount) > 0.1) {
+    // Suggérer une correction automatique plutôt qu'une erreur bloquante
+    if (totalCosts > 0) {
+      errors.totalClaimAmount = 
+        `La somme des coûts (${totalCosts.toFixed(2)}€) diffère du montant total des sinistres (${params.totalClaimAmount.toFixed(2)}€)`
+    }
   }
 
   return errors

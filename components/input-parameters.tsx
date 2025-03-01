@@ -17,28 +17,65 @@ export default function InputParameters({ params, onChange, errors = {}, disable
   const handleChange = React.useCallback(
     (key: keyof InsuranceParams, value: number | null) => {
       if (value !== null) {
+        // Créer un objet pour stocker toutes les modifications à apporter
+        const updates: Partial<InsuranceParams> = { [key]: value };
+        
         // Validation supplémentaire pour éviter les valeurs problématiques
         if (key === 'insuranceCompanyCost' && value === 0) {
           // Ne pas permettre un coût compagnie à zéro si des sinistres sont déclarés
           if (params.numberOfClaims > 0 && params.totalClaimAmount > 0) {
             // Utiliser une valeur par défaut basée sur le montant total des sinistres
-            value = params.totalClaimAmount * 0.8; // 80% du montant total par défaut
+            updates[key] = params.totalClaimAmount * 0.8; // 80% du montant total par défaut
+          }
+        }
+        
+        // Maintenir la cohérence entre les coûts et le montant total des sinistres
+        if (key === 'customerPaidCost') {
+          // Si le coût client change, ajuster le coût compagnie ou le montant total
+          if (params.totalClaimAmount > 0) {
+            // Ajuster le coût compagnie pour maintenir le montant total
+            updates.insuranceCompanyCost = Math.max(0, params.totalClaimAmount - value);
+          } else if (params.insuranceCompanyCost > 0) {
+            // Ou ajuster le montant total si le coût compagnie est déjà défini
+            updates.totalClaimAmount = value + params.insuranceCompanyCost;
+          }
+        } else if (key === 'insuranceCompanyCost') {
+          // Si le coût compagnie change, ajuster le coût client ou le montant total
+          if (params.totalClaimAmount > 0) {
+            // Ajuster le coût client pour maintenir le montant total
+            updates.customerPaidCost = Math.max(0, params.totalClaimAmount - value);
+          } else if (params.customerPaidCost > 0) {
+            // Ou ajuster le montant total si le coût client est déjà défini
+            updates.totalClaimAmount = value + params.customerPaidCost;
+          }
+        } else if (key === 'totalClaimAmount') {
+          // Si le montant total change, ajuster la répartition entre coûts
+          const currentTotal = params.customerPaidCost + params.insuranceCompanyCost;
+          if (currentTotal > 0) {
+            // Maintenir les proportions relatives
+            const ratio = value / currentTotal;
+            updates.customerPaidCost = params.customerPaidCost * ratio;
+            updates.insuranceCompanyCost = params.insuranceCompanyCost * ratio;
+          } else {
+            // Répartition par défaut si les coûts sont nuls
+            updates.customerPaidCost = value * 0.2; // 20% par défaut pour le client
+            updates.insuranceCompanyCost = value * 0.8; // 80% par défaut pour la compagnie
           }
         }
         
         // Validation pour le ratio S/P cible
         if (key === 'targetSPRatio' && (value <= 0 || value >= 1)) {
           // Limiter à une plage raisonnable entre 0.1 et 0.9
-          value = Math.max(0.1, Math.min(0.9, value));
+          updates[key] = Math.max(0.1, Math.min(0.9, value));
         }
         
         // Validation pour l'inflation
         if (key === 'inflation' && (value < 0 || value > 0.5)) {
           // Limiter à une plage raisonnable entre 0 et 50%
-          value = Math.max(0, Math.min(0.5, value));
+          updates[key] = Math.max(0, Math.min(0.5, value));
         }
         
-        onChange({ [key]: value })
+        onChange(updates)
       }
     },
     [onChange, params]
