@@ -10,6 +10,11 @@
  \____\__,_|_|\___|\__,_|_|\__,_|\__\___|\__,_|_|    \__,_|\___| |_|   |_|  |_|_| |_| |_|\___||___/
 ```
 
+<div class="language-selector">
+  <a href="#fr" class="active">🇫🇷 Français</a> | 
+  <a href="#en">🇬🇧 English</a>
+</div>
+
 <p align="center">
   <strong>Un outil puissant pour simuler et optimiser vos primes d'assurance</strong><br>
   <em>Propriété de Groupe Didacte</em>
@@ -32,6 +37,8 @@
 </p>
 
 </div>
+
+<a id="fr"></a>
 
 ## 🌟 Présentation
 
@@ -69,6 +76,7 @@ Cette application offre une interface intuitive pour:
 - **Validation intelligente**: Détection automatique des erreurs et incohérences dans les données
 - **Exportation flexible**: Possibilité d'exporter les résultats en JSON pour une utilisation externe
 - **Thème clair/sombre**: Interface adaptable aux préférences visuelles de l'utilisateur
+- **Interface multilingue**: Disponible en français et en anglais
 
 ## 📖 Guide d'utilisation
 
@@ -108,6 +116,7 @@ Une fois les données saisies, l'application calcule automatiquement:
 - **Sauvegarde des paramètres**: Enregistrez vos configurations pour une utilisation ultérieure
 - **Réinitialisation**: Remettez tous les paramètres à leurs valeurs par défaut
 - **Exportation**: Téléchargez les résultats au format JSON pour une analyse externe
+- **Changement de langue**: Basculez entre français et anglais via le sélecteur de langue
 
 ## 🔧 Paramètres de simulation
 
@@ -184,6 +193,7 @@ Créez un fichier `.env.local` à la racine du projet avec les variables suivant
 NEXT_PUBLIC_APP_NAME=Calculateur de Primes d'Assurance
 NEXT_PUBLIC_APP_VERSION=1.0.0
 NEXT_PUBLIC_ANALYTICS_ID=UA-XXXXXXXXX-X  # Optionnel
+NEXT_PUBLIC_DEFAULT_LOCALE=fr            # Langue par défaut (fr ou en)
 ```
 
 ## 🔍 Architecture technique
@@ -196,6 +206,7 @@ L'application est construite avec:
 - **Recharts**: Pour la visualisation des données
 - **React Hook Form**: Pour la gestion des formulaires
 - **Context API**: Pour la gestion de l'état global
+- **i18n**: Pour l'internationalisation (français et anglais)
 
 ### Structure du projet
 
@@ -208,6 +219,7 @@ calculateur-de-primes/
 │   ├── context/          # Contextes React
 │   ├── types.ts          # Types TypeScript
 │   └── insurance-calculations.ts  # Logique de calcul
+├── locales/              # Fichiers de traduction (fr.json, en.json)
 ├── public/               # Fichiers statiques
 └── styles/               # Styles globaux
 ```
@@ -270,6 +282,11 @@ Les contributions sont les bienvenues! Pour contribuer:
 <p>Utilisez le bouton "Réinitialiser" dans l'interface pour remettre tous les paramètres à leurs valeurs par défaut.</p>
 </details>
 
+<details>
+<summary><strong>Comment changer la langue de l'application?</strong></summary>
+<p>Cliquez sur le sélecteur de langue en haut de l'interface pour basculer entre français et anglais. Vos préférences linguistiques seront sauvegardées pour vos prochaines visites.</p>
+</details>
+
 ## 📄 Licence
 
 © 2024 Groupe Didacte. Tous droits réservés.
@@ -278,9 +295,282 @@ Ce logiciel est la propriété exclusive de Groupe Didacte et ne peut être util
 
 ---
 
+<a id="en"></a>
+
+<div align="center">
+
+# 🏢 Insurance Premium Calculator 🏢
+
+<div class="language-selector">
+  <a href="#fr">🇫🇷 Français</a> | 
+  <a href="#en" class="active">🇬🇧 English</a>
+</div>
+
+<p align="center">
+  <strong>A powerful tool to simulate and optimize your insurance premiums</strong><br>
+  <em>Property of Groupe Didacte</em>
+</p>
+
+</div>
+
+## 🌟 Overview
+
+The **Insurance Premium Calculator** is a modern web application that allows insurance professionals to simulate, calculate, and optimize insurance premiums based on various parameters and claims history.
+
+This application offers an intuitive interface to:
+- 💰 Calculate insurance premiums based on surface area and economic parameters
+- 📉 Analyze the impact of claims on premiums
+- ⚖️ Optimize the Claims/Premiums (C/P) ratio
+- 📊 Visualize results through interactive charts
+- 💾 Export data for further analysis
+
+<div align="center">
+  <img src="https://via.placeholder.com/800x400?text=Application+Screenshot" alt="Application Screenshot" width="80%" />
+</div>
+
+## 🚀 Features
+
+<div align="center">
+
+| 📊 **Simulation** | 📈 **Analysis** | 💾 **Data Management** |
+|:-----------------|:--------------|:------------------------|
+| Premium calculation | Interactive charts | Parameter saving |
+| Inflation adjustment | Detailed tables | Results export |
+| Deductible management | Before/after comparison | Local persistence |
+| Claims analysis | C/P ratio | Data validation |
+
+</div>
+
+### ✨ Key Strengths
+
+- **Intuitive Interface**: Simple and efficient navigation between different steps
+- **Real-time Calculations**: Results updated instantly when parameters are modified
+- **Dynamic Visualizations**: Interactive charts for better data understanding
+- **Intelligent Validation**: Automatic detection of errors and inconsistencies in data
+- **Flexible Export**: Ability to export results in JSON format for external use
+- **Light/Dark Theme**: Interface adaptable to user visual preferences
+- **Multilingual Interface**: Available in French and English
+
+## 📖 User Guide
+
+### Step 1: General Parameter Configuration
+
+Start by entering the general parameters for your simulation:
+
+1. Enter the **current premium per m²** you currently pay
+2. Indicate the **total surface area** of your property
+3. Define the **tax rate** applicable to your contract
+4. Adjust the **inflation rate** expected for the coming years
+5. Set your **target C/P ratio** according to your profitability objectives
+6. Specify the **deductible amount** applicable per claim
+
+### Step 2: Claims Data Entry
+
+Then enter information related to claims:
+
+1. Indicate the **total amount of claims** for the period considered
+2. Specify the **cost covered by insurance** (Company Cost)
+3. Enter the **cost paid by the customer** (deductibles, etc.)
+4. Indicate the **total number of claims** filed
+5. Specify the **number of water damage claims**
+
+### Step 3: Results Analysis
+
+Once the data is entered, the application automatically calculates:
+
+1. The **adjusted premium** based on parameters and claims history
+2. The **percentage and €/m² variation** compared to the current premium
+3. The **current C/P ratio** and its deviation from the target
+4. The **cost distribution** between insurer and insured
+5. **Comparative charts** to visualize results
+
+### Additional Features
+
+- **Parameter Saving**: Save your configurations for later use
+- **Reset**: Reset all parameters to their default values
+- **Export**: Download results in JSON format for external analysis
+- **Language Change**: Switch between French and English via the language selector
+
+## 🔧 Simulation Parameters
+
+The application takes into account numerous parameters for precise simulation:
+
+### General Parameters
+- **Current Premium (€/m²)**: Current insurance premium per square meter
+- **Total Surface Area (m²)**: Total insured area
+- **Tax Rate (%)**: Tax rate applicable to the insurance premium
+- **Inflation (%)**: Expected annual inflation rate
+- **Target C/P Ratio (%)**: Target Claims/Premiums ratio
+- **Deductible (€)**: Deductible amount per claim
+
+### Claims Data
+- **Total Claims Amount (€)**: Total sum of claims for the period
+- **Company Cost (€)**: Portion of claims covered by insurance
+- **Customer Paid Cost (€)**: Portion of claims paid by the customer
+- **Number of Claims**: Total number of claims filed
+- **Water Damage Claims**: Number of water damage claims
+
+## 📊 Results and Analysis
+
+The application generates detailed results including:
+
+- **Current vs. Adjusted Premium**: Comparison of amounts before and after adjustment
+- **Percentage and €/m² Variation**: Financial impact of adjustments
+- **Current vs. Target C/P Ratio**: Profitability analysis
+- **Cost Distribution**: Visualization of distribution between insurer and insured
+- **Calculation Details**: Access to all intermediate calculation steps
+
+### Main Calculation Formulas
+
+```
+Current C/P Ratio = Company Cost / Current Total Premium
+Current Total Premium = Premium per m² × Total Surface Area
+Projected Claims Cost = Company Cost × (1 + Inflation)
+Required Net Premium = Projected Claims Cost / Target C/P Ratio
+Adjusted Total Premium = Required Net Premium × (1 + Tax Rate)
+New Premium per m² = Adjusted Total Premium / Total Surface Area
+```
+
+## 🛠️ Installation and Setup
+
+### Prerequisites
+
+- Node.js 18.0 or higher
+- npm 9.0 or higher
+
+### Installation
+
+```bash
+# Clone the repository
+git clone [repo-url]
+cd insurance-premium-calculator
+
+# Install dependencies
+npm install
+
+# Launch the application in development mode
+npm run dev
+
+# Build for production
+npm run build
+
+# Start in production mode
+npm start
+```
+
+### Environment Variables
+
+Create a `.env.local` file at the root of the project with the following variables:
+
+```
+NEXT_PUBLIC_APP_NAME=Insurance Premium Calculator
+NEXT_PUBLIC_APP_VERSION=1.0.0
+NEXT_PUBLIC_ANALYTICS_ID=UA-XXXXXXXXX-X  # Optional
+NEXT_PUBLIC_DEFAULT_LOCALE=en            # Default language (fr or en)
+```
+
+## 🔍 Technical Architecture
+
+The application is built with:
+
+- **Next.js**: React framework for server-side and client-side rendering
+- **TypeScript**: For strong typing and better maintainability
+- **Tailwind CSS**: For responsive and modern design
+- **Recharts**: For data visualization
+- **React Hook Form**: For form management
+- **Context API**: For global state management
+- **i18n**: For internationalization (French and English)
+
+### Project Structure
+
+```
+insurance-premium-calculator/
+├── app/                  # Next.js pages and layout
+├── components/           # Reusable React components
+├── hooks/                # Custom React hooks
+├── lib/                  # Utilities and business logic
+│   ├── context/          # React contexts
+│   ├── types.ts          # TypeScript types
+│   └── insurance-calculations.ts  # Calculation logic
+├── locales/              # Translation files (fr.json, en.json)
+├── public/               # Static files
+└── styles/               # Global styles
+```
+
+## 🔒 Security and Performance
+
+- **Data Validation**: Complete verification of user inputs
+- **Error Handling**: Appropriate capture and processing of exceptions
+- **Caching**: Optimization of repetitive calculations
+- **Performance Monitoring**: Tracking of key metrics
+- **Debouncing**: Limitation of calculations during rapid input
+- **Lazy Loading**: Deferred loading of heavy components
+
+## 📱 Compatibility
+
+The application is fully responsive and compatible with:
+- 💻 Desktop computers (Windows, macOS, Linux)
+- 📱 Tablets (iOS, Android)
+- 📱 Smartphones (iOS, Android)
+- 🌐 Modern browsers (Chrome, Firefox, Safari, Edge)
+
+## 🔄 Updates and Maintenance
+
+The application benefits from regular maintenance:
+
+- 🔄 Quarterly updates of regulatory parameters
+- 🐛 Continuous bug fixes
+- ✨ New features based on user feedback
+- 🔍 Performance optimizations
+
+## 🤝 Contribution
+
+Contributions are welcome! To contribute:
+
+1. Fork the project
+2. Create a branch for your feature (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## ❓ FAQ
+
+<details>
+<summary><strong>How are adjusted premiums calculated?</strong></summary>
+<p>Adjusted premiums are calculated based on the target C/P ratio, claims history, expected inflation, and applicable taxes. The goal is to achieve the target C/P ratio while taking into account cost evolution.</p>
+</details>
+
+<details>
+<summary><strong>Can I export my results?</strong></summary>
+<p>Yes, the application allows exporting results in JSON format. Simply click the "Export" button in the results interface.</p>
+</details>
+
+<details>
+<summary><strong>Is the data saved?</strong></summary>
+<p>Parameters are saved locally in the browser. You can also use the "Save" button to explicitly save your current configuration.</p>
+</details>
+
+<details>
+<summary><strong>How do I reset all parameters?</strong></summary>
+<p>Use the "Reset" button in the interface to reset all parameters to their default values.</p>
+</details>
+
+<details>
+<summary><strong>How do I change the application language?</strong></summary>
+<p>Click on the language selector at the top of the interface to switch between French and English. Your language preferences will be saved for your next visits.</p>
+</details>
+
+## 📄 License
+
+© 2024 Groupe Didacte. All rights reserved.
+
+This software is the exclusive property of Groupe Didacte and may not be used, copied, modified, or distributed without prior written authorization.
+
+---
+
 <div align="center">
   <p>
-    <strong>Groupe Didacte</strong> - Solutions d'assurance innovantes
+    <strong>Groupe Didacte</strong> - Innovative insurance solutions
   </p>
   <p>
     <a href="https://www.groupedidacte.com">www.groupedidacte.com</a> • 
@@ -293,3 +583,19 @@ Ce logiciel est la propriété exclusive de Groupe Didacte et ne peut être util
     <a href="https://www.linkedin.com/company/groupe-didacte"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
   </p>
 </div>
+
+<style>
+.language-selector {
+  margin: 20px 0;
+  font-size: 16px;
+}
+.language-selector a {
+  padding: 5px 10px;
+  text-decoration: none;
+  border-radius: 5px;
+}
+.language-selector a.active {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+</style>
