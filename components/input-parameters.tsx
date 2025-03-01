@@ -32,7 +32,6 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   min={0}
                   step={0.1}
                   precision={2}
-                  showControls
                   showClear
                   formatOptions={{ style: "currency", currency: "EUR" }}
                   error={errors.premiumPerSqm}
@@ -49,7 +48,6 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   min={0}
                   step={10}
                   precision={0}
-                  showControls
                   showClear
                   error={errors.totalSurface}
                   disabled={disabled}
@@ -60,13 +58,12 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   id="taxRate"
                   label="Taux de taxe (%)"
                   tooltip="Taux de taxe applicable sur la prime d'assurance"
-                  value={params.taxRate * 100}
-                  onChange={(value) => onChange({ taxRate: (value ?? 0) / 100 })}
+                  value={params.taxRate}
+                  onChange={(value) => onChange({ taxRate: value ?? 0 })}
                   min={0}
-                  max={100}
-                  step={0.1}
+                  max={1}
+                  step={0.001}
                   precision={1}
-                  showControls
                   showClear
                   formatOptions={{ style: "percent", maximumFractionDigits: 1 }}
                   error={errors.taxRate}
@@ -78,13 +75,12 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   id="inflation"
                   label="Inflation (%)"
                   tooltip="Taux d'inflation annuel prévu"
-                  value={params.inflation * 100}
-                  onChange={(value) => onChange({ inflation: (value ?? 0) / 100 })}
+                  value={params.inflation}
+                  onChange={(value) => onChange({ inflation: value ?? 0 })}
                   min={0}
-                  max={100}
-                  step={0.1}
+                  max={1}
+                  step={0.001}
                   precision={1}
-                  showControls
                   showClear
                   formatOptions={{ style: "percent", maximumFractionDigits: 1 }}
                   error={errors.inflation}
@@ -96,13 +92,12 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   id="targetSPRatio"
                   label="S/P cible (%)"
                   tooltip="Ratio Sinistres/Primes cible"
-                  value={params.targetSPRatio * 100}
-                  onChange={(value) => onChange({ targetSPRatio: (value ?? 0) / 100 })}
+                  value={params.targetSPRatio}
+                  onChange={(value) => onChange({ targetSPRatio: value ?? 0 })}
                   min={0}
-                  max={100}
-                  step={0.1}
+                  max={1}
+                  step={0.001}
                   precision={1}
-                  showControls
                   showClear
                   formatOptions={{ style: "percent", maximumFractionDigits: 1 }}
                   error={errors.targetSPRatio}
@@ -120,7 +115,6 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   max={10000}
                   step={100}
                   precision={0}
-                  showControls
                   showClear
                   formatOptions={{ style: "currency", currency: "EUR" }}
                   error={errors.deductible}
@@ -148,7 +142,6 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   min={0}
                   step={1000}
                   precision={0}
-                  showControls
                   showClear
                   formatOptions={{ style: "currency", currency: "EUR" }}
                   error={errors.totalClaimAmount}
@@ -165,7 +158,6 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   min={0}
                   step={1000}
                   precision={0}
-                  showControls
                   showClear
                   formatOptions={{ style: "currency", currency: "EUR" }}
                   error={errors.insuranceCompanyCost}
@@ -182,7 +174,6 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   min={0}
                   step={1000}
                   precision={0}
-                  showControls
                   showClear
                   formatOptions={{ style: "currency", currency: "EUR" }}
                   error={errors.customerPaidCost}
@@ -199,7 +190,6 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   min={0}
                   step={1}
                   precision={0}
-                  showControls
                   showClear
                   error={errors.numberOfClaims}
                   disabled={disabled}
@@ -216,7 +206,6 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   max={params.numberOfClaims}
                   step={1}
                   precision={0}
-                  showControls
                   showClear
                   error={errors.numberOfWaterDamageClaims}
                   disabled={disabled}
