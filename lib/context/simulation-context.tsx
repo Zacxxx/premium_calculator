@@ -58,7 +58,7 @@ function simulationReducer(state: SimulationState, action: SimulationAction): Si
         ...state,
         results: action.payload,
         isDirty: false,
-        lastCalculation: Date.now(),
+        lastCalculation: typeof window !== 'undefined' ? Date.now() : null,
       }
     case "SET_ERRORS":
       return {

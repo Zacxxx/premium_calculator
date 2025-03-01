@@ -128,7 +128,8 @@ export default function InsuranceSimulator() {
   const handleExportResults = React.useCallback(() => {
     if (!results) return
 
-    const startTime = performance.now()
+    const metricName = "exportResults"
+    performanceMonitor.start(metricName)
     try {
       const resultsData = {
         params,
@@ -138,7 +139,9 @@ export default function InsuranceSimulator() {
 
       const dataStr = JSON.stringify(resultsData, null, 2)
       const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
-      const exportFileDefaultName = `simulation-assurance-${new Date().toISOString().slice(0, 10)}.json`
+      
+      // Use a stable date format for the filename to avoid hydration issues
+      const exportFileDefaultName = `simulation-assurance-export.json`
 
       const linkElement = document.createElement("a")
       linkElement.setAttribute("href", dataUri)
@@ -158,13 +161,12 @@ export default function InsuranceSimulator() {
         variant: "destructive",
       })
     } finally {
-      performanceMonitor.start("exportResults")
-      performanceMonitor.end("exportResults")
+      performanceMonitor.end(metricName)
     }
   }, [results, params, toast])
 
   const handleReset = React.useCallback(() => {
-    const startTime = performance.now()
+    performanceMonitor.start("resetParameters")
     try {
       resetParams()
       setCurrentStep(0)
@@ -183,7 +185,6 @@ export default function InsuranceSimulator() {
         variant: "destructive",
       })
     } finally {
-      performanceMonitor.start("resetParameters")
       performanceMonitor.end("resetParameters")
     }
   }, [resetParams, toast])

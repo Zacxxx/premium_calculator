@@ -10,27 +10,26 @@ import { debug } from "@/lib/debug-utils"
  * @returns [storedValue, setValue] tuple
  */
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
-  const [storedValue, setStoredValue] = React.useState<T>(() => {
-    if (typeof window === "undefined") {
-      return initialValue
-    }
-
+  // Always initialize with initialValue to avoid hydration mismatch
+  const [storedValue, setStoredValue] = React.useState<T>(initialValue)
+  
+  // Only access localStorage after component has mounted (client-side only)
+  React.useEffect(() => {
     try {
       const item = window.localStorage.getItem(key)
-      return item ? JSON.parse(item) : initialValue
+      if (item) {
+        setStoredValue(JSON.parse(item))
+      }
     } catch (error) {
       debug.error(`Error reading localStorage key "${key}":`, error)
-      return initialValue
     }
-  })
+  }, [key])
 
   const setValue = React.useCallback(
     (value: T) => {
       try {
         setStoredValue(value)
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(key, JSON.stringify(value))
-        }
+        window.localStorage.setItem(key, JSON.stringify(value))
       } catch (error) {
         debug.error(`Error setting localStorage key "${key}":`, error)
       }
