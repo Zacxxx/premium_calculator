@@ -3,10 +3,12 @@ import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SimulationProvider } from "@/lib/context/simulation-context"
+import { FontSizeProvider } from "@/lib/context/font-size-context"
 import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css"
+import "@/styles/font-scaling.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -48,8 +50,10 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SimulationProvider>
-            {children}
-            <Toaster />
+            <FontSizeProvider>
+              {children}
+              <Toaster />
+            </FontSizeProvider>
           </SimulationProvider>
         </ThemeProvider>
         <Analytics />

@@ -2,14 +2,21 @@
 
 import React from "react"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { FontSizeControl } from "@/components/ui/font-size-control"
 import { useMounted } from "@/lib/hooks/use-mounted"
 import { cn } from "@/lib/utils"
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   showThemeToggle?: boolean
+  showFontSizeControl?: boolean
 }
 
-export const Header = React.memo(function Header({ className, showThemeToggle = true, ...props }: HeaderProps) {
+export const Header = React.memo(function Header({ 
+  className, 
+  showThemeToggle = true, 
+  showFontSizeControl = true,
+  ...props 
+}: HeaderProps) {
   const mounted = useMounted()
 
   return (
@@ -28,7 +35,10 @@ export const Header = React.memo(function Header({ className, showThemeToggle = 
         </div>
 
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <nav className="flex items-center space-x-2">{showThemeToggle && mounted && <ThemeToggle />}</nav>
+          <nav className="flex items-center space-x-4">
+            {showFontSizeControl && mounted && <FontSizeControl variant="horizontal" />}
+            {showThemeToggle && mounted && <ThemeToggle />}
+          </nav>
         </div>
       </div>
     </header>

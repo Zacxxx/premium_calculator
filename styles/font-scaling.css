@@ -1,0 +1,69 @@
+/* 
+ * font-scaling.css
+ * 
+ * Ce fichier contient les règles CSS pour appliquer l'échelle de taille de police
+ * à tous les éléments textuels du site.
+ */
+
+:root {
+  --font-scale: 1;
+}
+
+/* Appliquer l'échelle de police à tous les éléments textuels */
+html {
+  font-size: calc(85% * var(--font-scale));
+}
+
+/* Assurer que tous les composants textuels utilisent l'échelle */
+body, 
+h1, h2, h3, h4, h5, h6, 
+p, span, a, button, input, textarea, select, label,
+.text-xs, .text-sm, .text-base, .text-lg, .text-xl,
+.text-2xl, .text-3xl, .text-4xl, .text-5xl {
+  /* Garder les proportions relatives mais les faire passer par notre échelle */
+  font-size: calc(1em * var(--font-scale));
+}
+
+/* Cas spéciaux pour certains composants qui pourraient avoir des tailles fixes */
+.recharts-text, .recharts-label {
+  font-size: calc(12px * var(--font-scale));
+}
+
+/* Assurer que les éléments Tailwind suivent également l'échelle */
+@media (min-width: 640px) {
+  .sm\:text-xs, .sm\:text-sm, .sm\:text-base, .sm\:text-lg, .sm\:text-xl,
+  .sm\:text-2xl, .sm\:text-3xl, .sm\:text-4xl, .sm\:text-5xl {
+    font-size: calc(1em * var(--font-scale));
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:text-xs, .md\:text-sm, .md\:text-base, .md\:text-lg, .md\:text-xl,
+  .md\:text-2xl, .md\:text-3xl, .md\:text-4xl, .md\:text-5xl {
+    font-size: calc(1em * var(--font-scale));
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:text-xs, .lg\:text-sm, .lg\:text-base, .lg\:text-lg, .lg\:text-xl,
+  .lg\:text-2xl, .lg\:text-3xl, .lg\:text-4xl, .lg\:text-5xl {
+    font-size: calc(1em * var(--font-scale));
+  }
+}
+
+/* Adapter les tailles de texte en mode paysage */
+@media (orientation: landscape) {
+  .landscape\:text-xs, .landscape\:text-sm, .landscape\:text-base, 
+  .landscape\:text-lg, .landscape\:text-xl {
+    font-size: calc(1em * var(--font-scale));
+  }
+}
+
+/* Assurer que les composants de recharts s'adaptent bien */
+.recharts-cartesian-axis-tick-value,
+.recharts-legend-item-text,
+.recharts-tooltip-item-name,
+.recharts-tooltip-item-value,
+.recharts-tooltip-label {
+  font-size: calc(12px * var(--font-scale)) !important;
+} 

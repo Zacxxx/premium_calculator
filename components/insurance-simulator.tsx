@@ -191,52 +191,65 @@ export default function InsuranceSimulator() {
 
   return (
     <ErrorBoundary>
-      <Card className="p-6 shadow-lg">
-        <div className="mb-8">
-          <StepIndicator steps={SIMULATION_STEPS} currentStep={currentStep} />
-        </div>
-
-        <div className="flex justify-end gap-2 mb-4">
-          <Button variant="outline" size="sm" onClick={handleReset}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Réinitialiser
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleSaveParameters}>
-            <Save className="h-4 w-4 mr-2" />
-            Sauvegarder
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExportResults} disabled={!results}>
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-        </div>
-
-        {/* Section du simulateur */}
-        <div className="space-y-6 mb-8">
-          <h2 className="text-xl font-semibold">Simulateur</h2>
-          {isCalculating ? (
-            <LoadingState />
-          ) : (
-            <InputParameters params={params} onChange={updateParams} errors={errors} />
-          )}
-        </div>
-
-        {/* Section des résultats */}
-        <div className="mt-8 pt-8 border-t border-border">
-          <h2 className="text-xl font-semibold mb-6">Résultats</h2>
-          {isCalculating ? (
-            <LoadingState />
-          ) : results ? (
-            <ResultsDisplay results={results} params={params} />
-          ) : (
-            <div className="text-center py-6 bg-muted/50 rounded-md">
-              <p className="text-muted-foreground">
-                {Object.keys(errors).length > 0 
-                  ? "Veuillez corriger les erreurs dans les paramètres pour voir les résultats."
-                  : "Ajustez les paramètres pour calculer les résultats."}
-              </p>
+      <Card className="p-4 landscape:p-4 shadow-lg">
+        <div className="landscape:flex landscape:flex-row landscape:items-start landscape:gap-6">
+          {/* Colonne de gauche en mode paysage - En-tête et paramètres */}
+          <div className="landscape:w-[35%] landscape:pr-4 landscape:border-r landscape:border-border">
+            <div className="mb-5 landscape:mb-4">
+              <StepIndicator steps={SIMULATION_STEPS} currentStep={currentStep} />
             </div>
-          )}
+
+            <div className="flex justify-end gap-2 mb-4 landscape:mb-3">
+              <Button variant="outline" size="sm" onClick={handleReset}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Réinitialiser
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSaveParameters}>
+                <Save className="h-4 w-4 mr-2" />
+                Sauvegarder
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportResults} disabled={!results}>
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+            </div>
+
+            {/* Section du simulateur */}
+            <div className="space-y-3 mb-8 landscape:mb-0">
+              <h2 className="text-xl font-semibold landscape:text-lg">Simulateur</h2>
+              {isCalculating ? (
+                <div className="landscape:max-h-[calc(100vh-14rem)] landscape:overflow-y-auto landscape:pr-2">
+                  <LoadingState />
+                </div>
+              ) : (
+                <div className="landscape:max-h-[calc(100vh-14rem)] landscape:overflow-y-auto landscape:pr-2">
+                  <InputParameters params={params} onChange={updateParams} errors={errors} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Colonne de droite en mode paysage - Résultats */}
+          <div className="pt-6 border-t border-border landscape:border-t-0 landscape:pt-0 landscape:w-[65%] landscape:flex-grow">
+            <h2 className="text-xl font-semibold mb-4 landscape:mb-3 landscape:text-lg">Résultats</h2>
+            {isCalculating ? (
+              <div className="landscape:max-h-[calc(100vh-10rem)] landscape:overflow-y-auto">
+                <LoadingState />
+              </div>
+            ) : results ? (
+              <div className="landscape:max-h-[calc(100vh-10rem)] landscape:overflow-y-auto landscape:pr-1">
+                <ResultsDisplay results={results} params={params} />
+              </div>
+            ) : (
+              <div className="text-center py-6 bg-muted/50 rounded-md">
+                <p className="text-muted-foreground">
+                  {Object.keys(errors).length > 0 
+                    ? "Veuillez corriger les erreurs dans les paramètres pour voir les résultats."
+                    : "Ajustez les paramètres pour calculer les résultats."}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </Card>
     </ErrorBoundary>
