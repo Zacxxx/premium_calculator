@@ -227,7 +227,15 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
     }
   }, [state.params])
 
+  const parameterLoadedRef = React.useRef(false);
+  
   const loadParams = React.useCallback(() => {
+    // Skip if we've already loaded parameters in this session
+    if (parameterLoadedRef.current) {
+      debug.log("Parameters already loaded, skipping");
+      return;
+    }
+    
     try {
       debug.log("Loading params from localStorage")
       const savedParams = localStorage.getItem("insuranceParams")
@@ -235,6 +243,8 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
         const parsed = JSON.parse(savedParams)
         dispatch({ type: "SET_PARAMS", payload: parsed })
         analytics.trackEvent({ name: "parameters_loaded" })
+        // Mark that we've loaded parameters
+        parameterLoadedRef.current = true;
       }
     } catch (error) {
       const handledError = handleError(error)

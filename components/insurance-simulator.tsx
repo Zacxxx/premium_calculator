@@ -45,6 +45,7 @@ export default function InsuranceSimulator() {
   const debouncedParams = useDebounce(params)
   const [lastSavedParams, saveParamsToStorage] = useLocalStorage<string | null>("lastSavedParams", null)
   const [defaultResultsCalculated, setDefaultResultsCalculated] = React.useState(false)
+  const initializedRef = React.useRef(false)
 
   // Performance tracking
   React.useEffect(() => {
@@ -55,8 +56,13 @@ export default function InsuranceSimulator() {
     }
   }, [])
 
-  // Load params on mount and calculate default results
+  // Load params on mount and calculate default results - only once
   React.useEffect(() => {
+    // Skip if already initialized
+    if (initializedRef.current) {
+      return;
+    }
+    
     const metricName = "loadParams"
     performanceMonitor.start(metricName)
     try {
@@ -66,11 +72,14 @@ export default function InsuranceSimulator() {
       debug.log("Parameters loaded successfully")
       
       // Calculer les résultats par défaut si aucun résultat n'est disponible
-      if (!results && !isCalculating && !defaultResultsCalculated) {
+      if (!results && !isCalculating) {
         debug.log("Calculating default results")
         recalculate()
         setDefaultResultsCalculated(true)
       }
+      
+      // Mark as initialized
+      initializedRef.current = true;
     } catch (error) {
       debug.error("Error loading parameters:", error)
       toast({
@@ -81,7 +90,7 @@ export default function InsuranceSimulator() {
     } finally {
       performanceMonitor.end(metricName)
     }
-  }, [loadParams, toast, results, isCalculating, defaultResultsCalculated, recalculate])
+  }, []) // Empty dependency array - run only once on mount
 
   // Update step based on state
   React.useEffect(() => {

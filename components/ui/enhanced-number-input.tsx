@@ -31,6 +31,19 @@ interface EnhancedNumberInputProps extends Omit<React.InputHTMLAttributes<HTMLIn
   onError?: (error: string) => void
 }
 
+// Create a memoized tooltip component to prevent re-renders
+const InfoTooltip = React.memo(({ content }: { content: string }) => (
+  <div className="relative group flex items-center">
+    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+    <div className="absolute invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity z-50 bottom-full mb-2 right-0 transform">
+      <div className="bg-popover text-popover-foreground border rounded-md shadow-md p-2 text-sm max-w-xs">
+        {content}
+      </div>
+    </div>
+  </div>
+));
+InfoTooltip.displayName = "InfoTooltip";
+
 export function EnhancedNumberInput({
   label,
   tooltip,
@@ -55,9 +68,15 @@ export function EnhancedNumberInput({
 }: EnhancedNumberInputProps) {
   const mounted = useMounted()
   const inputRef = React.useRef<HTMLInputElement>(null)
+  
+  // Memoize formatOptions to create a stable reference
+  const stableFormatOptions = React.useMemo(() => formatOptions || {}, [
+    formatOptions ? JSON.stringify(formatOptions) : null
+  ]);
+  
   const [localValue, setLocalValue] = React.useState<string>(() => {
     if (typeof value === "number") {
-      return formatNumber(value, { ...formatOptions, maximumFractionDigits: precision })
+      return formatNumber(value, { ...stableFormatOptions, maximumFractionDigits: precision })
     }
     return ""
   })
@@ -121,7 +140,7 @@ export function EnhancedNumberInput({
     if (max !== undefined) newValue = Math.min(newValue, max)
 
     // Format and update
-    setLocalValue(formatNumber(newValue, { ...formatOptions, maximumFractionDigits: precision }))
+    setLocalValue(formatNumber(newValue, { ...stableFormatOptions, maximumFractionDigits: precision }))
     onChange?.(newValue)
   }
 
@@ -137,7 +156,7 @@ export function EnhancedNumberInput({
     
     try {
       // Utiliser notre fonction parseNumber personnalisée avec les options de formatage
-      const parsed = parseNumber(localValue, formatOptions)
+      const parsed = parseNumber(localValue)
       
       // Seulement mettre à jour si la valeur est valide et différente de la valeur actuelle
       if (parsed !== null) {
@@ -146,19 +165,19 @@ export function EnhancedNumberInput({
           updateValue(parsed)
         } else {
           // Si la valeur n'a pas changé, juste reformater l'affichage
-          setLocalValue(formatNumber(value, { ...formatOptions, maximumFractionDigits: precision }))
+          setLocalValue(formatNumber(value, { ...stableFormatOptions, maximumFractionDigits: precision }))
         }
       } else if (required && localValue.trim() === '') {
         // Si le champ est requis et vide, restaurer la valeur précédente
         if (typeof value === "number") {
-          setLocalValue(formatNumber(value, { ...formatOptions, maximumFractionDigits: precision }))
+          setLocalValue(formatNumber(value, { ...stableFormatOptions, maximumFractionDigits: precision }))
         }
       }
     } catch (error) {
       console.error("Error parsing number:", error)
       // En cas d'erreur, restaurer la valeur précédente
       if (typeof value === "number") {
-        setLocalValue(formatNumber(value, { ...formatOptions, maximumFractionDigits: precision }))
+        setLocalValue(formatNumber(value, { ...stableFormatOptions, maximumFractionDigits: precision }))
       }
     }
     
@@ -166,7 +185,7 @@ export function EnhancedNumberInput({
   }
 
   const parseNumber = (value: string): number | null => {
-    if (formatOptions?.style === "percent") {
+    if (stableFormatOptions?.style === "percent") {
       // For percentage inputs, remove % and any thousand separators
       const cleanValue = value.replace(/[^\d.-]/g, "")
       const parsed = Number.parseFloat(cleanValue)
@@ -184,7 +203,7 @@ export function EnhancedNumberInput({
     setLocalError(undefined)
     const parsed = parseNumber(localValue)
     if (parsed !== null) {
-      if (formatOptions?.style === "percent") {
+      if (stableFormatOptions?.style === "percent") {
         setLocalValue((parsed * 100).toString())
       } else {
         setLocalValue(parsed.toString())
@@ -193,13 +212,13 @@ export function EnhancedNumberInput({
   }
 
   const increment = () => {
-    const current = parseNumber(localValue, formatOptions) ?? 0
+    const current = parseNumber(localValue) ?? 0
     updateValue(current + (step ?? 1))
     inputRef.current?.focus()
   }
 
   const decrement = () => {
-    const current = parseNumber(localValue, formatOptions) ?? 0
+    const current = parseNumber(localValue) ?? 0
     updateValue(current - (step ?? 1))
     inputRef.current?.focus()
   }
@@ -223,7 +242,7 @@ export function EnhancedNumberInput({
         e.preventDefault()
         // Restaurer la valeur d'origine et perdre le focus
         if (typeof value === "number") {
-          setLocalValue(formatNumber(value, { ...formatOptions, maximumFractionDigits: precision }))
+          setLocalValue(formatNumber(value, { ...stableFormatOptions, maximumFractionDigits: precision }))
         } else {
           setLocalValue("")
         }
@@ -231,7 +250,7 @@ export function EnhancedNumberInput({
         break
       case "Enter":
         e.preventDefault()
-        const parsed = parseNumber(localValue, formatOptions)
+        const parsed = parseNumber(localValue)
         if (parsed !== null) {
           updateValue(parsed)
         }
@@ -241,12 +260,15 @@ export function EnhancedNumberInput({
   }
 
   React.useEffect(() => {
-    if (typeof value === "number" && !isFocused) {
-      setLocalValue(formatNumber(value, { ...formatOptions, maximumFractionDigits: precision }))
-    } else if (value === null && !isFocused) {
+    // Skip effect if component is not mounted or if we're focused (user is editing)
+    if (!mounted || isFocused) return;
+    
+    if (typeof value === "number") {
+      setLocalValue(formatNumber(value, { ...stableFormatOptions, maximumFractionDigits: precision }))
+    } else if (value === null) {
       setLocalValue("")
     }
-  }, [value, isFocused, formatOptions, precision])
+  }, [value, isFocused, stableFormatOptions, precision, mounted]);
 
   if (!mounted) {
     return null
@@ -266,18 +288,7 @@ export function EnhancedNumberInput({
         >
           {label}
         </Label>
-        {tooltip && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-xs">{tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+        {tooltip && <InfoTooltip content={tooltip} />}
       </div>
       <div
         className="relative flex items-center"
@@ -327,7 +338,7 @@ export function EnhancedNumberInput({
               size="icon"
               className="h-1/2 px-2 rounded-none rounded-tr"
               onClick={increment}
-              disabled={disabled || (max !== undefined && parseNumber(localValue, formatOptions) === max)}
+              disabled={disabled || (max !== undefined && parseNumber(localValue) === max)}
               tabIndex={-1}
               aria-label="Augmenter la valeur"
             >
@@ -339,7 +350,7 @@ export function EnhancedNumberInput({
               size="icon"
               className="h-1/2 px-2 rounded-none rounded-br border-t"
               onClick={decrement}
-              disabled={disabled || (min !== undefined && parseNumber(localValue, formatOptions) === min)}
+              disabled={disabled || (min !== undefined && parseNumber(localValue) === min)}
               tabIndex={-1}
               aria-label="Diminuer la valeur"
             >
