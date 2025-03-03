@@ -15,6 +15,8 @@ export const defaultParams: InsuranceParams = {
   taxRate: DEFAULT_TAX_RATE,
   inflation: DEFAULT_INFLATION_RATE,
   deductible: DEFAULT_DEDUCTIBLE,
+  totalDeductibleAmount: 0,
+  deductibleMode: 'perClaim',
   targetSPRatio: DEFAULT_TARGET_SP_RATIO,
   numberOfClaims: 0,
   customerPaidCost: 0,

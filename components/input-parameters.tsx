@@ -4,6 +4,9 @@ import type { InsuranceParams } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { EnhancedNumberInput } from "@/components/ui/enhanced-number-input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Label } from "@/components/ui/label"
+import { Info } from "lucide-react"
 import React from "react"
 
 interface InputParametersProps {
@@ -159,14 +162,15 @@ export default function InputParameters({ params, onChange, errors = {}, disable
 
                 <EnhancedNumberInput
                   id="targetSPRatio"
-                  label="S/P cible (%)"
+                  label="Ratio S/P cible (%)"
                   tooltip="Ratio Sinistres/Primes cible"
                   value={params.targetSPRatio}
                   onChange={(value) => handleChange('targetSPRatio', value)}
                   min={0}
                   max={1}
-                  step={0.001}
+                  step={0.01}
                   precision={1}
+                  isPercentage
                   showClear
                   formatOptions={{ style: "percent", maximumFractionDigits: 1 }}
                   error={errors.targetSPRatio}
@@ -174,22 +178,68 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   required
                 />
 
-                <EnhancedNumberInput
-                  id="deductible"
-                  label="Franchise (€)"
-                  tooltip="Montant de la franchise par sinistre"
-                  value={params.deductible}
-                  onChange={(value) => handleChange('deductible', value)}
-                  min={0}
-                  max={10000000000}
-                  step={100}
-                  precision={0}
-                  showClear
-                  formatOptions={{ style: "currency", currency: "EUR" }}
-                  error={errors.deductible}
-                  disabled={disabled}
-                  required
-                />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="deductible-tabs">
+                      Franchise
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Choisissez le mode de calcul de la franchise
+                      </div>
+                    </Label>
+                    <div className="flex items-center">
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </div>
+                  </div>
+                  
+                  <Tabs 
+                    defaultValue={params.deductibleMode} 
+                    onValueChange={(value) => handleChange('deductibleMode', value as 'perClaim' | 'totalAmount')}
+                    className="w-full"
+                  >
+                    <TabsList className="grid grid-cols-2 mb-4">
+                      <TabsTrigger value="perClaim">Par sinistre</TabsTrigger>
+                      <TabsTrigger value="totalAmount">Montant total</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="perClaim" className="space-y-4">
+                      <EnhancedNumberInput
+                        id="deductible"
+                        label="Franchise par sinistre (€)"
+                        tooltip="Montant de la franchise par sinistre"
+                        value={params.deductible}
+                        onChange={(value) => handleChange('deductible', value)}
+                        min={0}
+                        max={10000000000}
+                        step={100}
+                        precision={0}
+                        showClear
+                        formatOptions={{ style: "currency", currency: "EUR" }}
+                        error={errors.deductible}
+                        disabled={disabled || params.deductibleMode !== 'perClaim'}
+                        required={params.deductibleMode === 'perClaim'}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="totalAmount" className="space-y-4">
+                      <EnhancedNumberInput
+                        id="totalDeductibleAmount"
+                        label="Montant total de franchise (€)"
+                        tooltip="Montant total de franchise réellement payée par le client"
+                        value={params.totalDeductibleAmount}
+                        onChange={(value) => handleChange('totalDeductibleAmount', value)}
+                        min={0}
+                        max={10000000000}
+                        step={100}
+                        precision={0}
+                        showClear
+                        formatOptions={{ style: "currency", currency: "EUR" }}
+                        error={errors.totalDeductibleAmount}
+                        disabled={disabled || params.deductibleMode !== 'totalAmount'}
+                        required={params.deductibleMode === 'totalAmount'}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </div>
               </CardContent>
             </Card>
           </AccordionContent>

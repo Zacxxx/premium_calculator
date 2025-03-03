@@ -21,6 +21,10 @@ export interface InsuranceParams {
   inflation: number
   /** Deductible amount per claim in euros */
   deductible: number
+  /** Total deductible amount actually paid by the customer in euros */
+  totalDeductibleAmount: number
+  /** Mode for deductible calculation: 'perClaim' or 'totalAmount' */
+  deductibleMode: 'perClaim' | 'totalAmount'
   /** Target S/P ratio as a decimal */
   targetSPRatio: number
   /** Total number of claims */

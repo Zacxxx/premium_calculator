@@ -127,34 +127,62 @@ export function calculateResults(params: InsuranceParams): SimulationResults {
      * Principe : La franchise est le montant que l'assuré prend à sa charge avant que l'assurance n'intervienne.
      * Plus la franchise est élevée, moins l'assurance aura à payer en cas de sinistre.
      * 
-     * Méthode de calcul :
+     * Deux modes de calcul sont possibles :
+     * 1. Mode 'perClaim' : La franchise est calculée par sinistre
+     * 2. Mode 'totalAmount' : Le montant total de franchise réellement payée est utilisé directement
+     * 
+     * Méthode de calcul en mode 'perClaim' :
      * 1. On estime l'économie potentielle pour l'assureur grâce à la franchise
      * 2. Cette économie est limitée à un pourcentage du coût total pour rester réaliste
      * 3. On ajuste le coût supporté par l'assurance en conséquence
      */
     
-    // Calcul de l'économie potentielle due à la franchise
-    // On utilise un facteur d'impact pour modérer l'effet de la franchise (plus réaliste)
-    const franchiseImpactFactor = 0.3; // La franchise n'a pas un impact à 100% sur tous les sinistres
+    let actualDeductibleImpact = 0;
     
-    // L'économie potentielle est la franchise multipliée par le nombre de sinistres, 
-    // pondérée par le facteur d'impact
-    const potentialSavings = params.deductible * params.numberOfClaims * franchiseImpactFactor;
-    
-    // On limite l'économie à un maximum de 30% du coût total supporté par l'assurance
-    // pour éviter des réductions irréalistes
-    const maxSavings = params.insuranceCompanyCost * 0.3;
-    const actualDeductibleImpact = Math.min(potentialSavings, maxSavings);
+    if (params.deductibleMode === 'totalAmount' && params.totalDeductibleAmount > 0) {
+      // Mode montant total : utiliser directement le montant total de franchise
+      // On applique quand même un facteur d'impact pour rester réaliste
+      const franchiseImpactFactor = 0.8; // Impact plus élevé car c'est le montant réel payé
+      const maxImpact = params.insuranceCompanyCost * 0.5; // Limite plus élevée car c'est le montant réel
+      actualDeductibleImpact = Math.min(params.totalDeductibleAmount * franchiseImpactFactor, maxImpact);
+      
+      debug.log("Impact de la franchise (mode montant total):", {
+        totalDeductibleAmount: params.totalDeductibleAmount,
+        franchiseImpactFactor,
+        maxImpact,
+        actualDeductibleImpact
+      });
+    } else {
+      // Mode par sinistre : calculer l'impact basé sur la franchise par sinistre
+      // Calcul de l'économie potentielle due à la franchise
+      // On utilise un facteur d'impact pour modérer l'effet de la franchise (plus réaliste)
+      const franchiseImpactFactor = 0.3; // La franchise n'a pas un impact à 100% sur tous les sinistres
+      
+      // L'économie potentielle est la franchise multipliée par le nombre de sinistres, 
+      // pondérée par le facteur d'impact
+      const potentialSavings = params.deductible * params.numberOfClaims * franchiseImpactFactor;
+      
+      // On limite l'économie à un maximum de 30% du coût total supporté par l'assurance
+      // pour éviter des réductions irréalistes
+      const maxSavings = params.insuranceCompanyCost * 0.3;
+      actualDeductibleImpact = Math.min(potentialSavings, maxSavings);
+      
+      debug.log("Impact de la franchise (mode par sinistre):", {
+        deductible: params.deductible,
+        numberOfClaims: params.numberOfClaims,
+        franchiseImpactFactor,
+        potentialSavings,
+        maxSavings,
+        actualDeductibleImpact
+      });
+    }
     
     // Calcul du coût ajusté pour l'assurance après prise en compte de la franchise
     const adjustedInsuranceCompanyCost = Math.max(0, params.insuranceCompanyCost - actualDeductibleImpact);
     
-    debug.log("Impact de la franchise sur le coût assurance:", {
+    debug.log("Coût ajusté pour l'assurance:", {
       originalInsuranceCost: params.insuranceCompanyCost,
-      deductible: params.deductible,
-      franchiseImpactFactor,
-      potentialSavings,
-      maxSavings,
+      deductibleMode: params.deductibleMode,
       actualDeductibleImpact,
       adjustedInsuranceCompanyCost
     });
@@ -168,11 +196,21 @@ export function calculateResults(params: InsuranceParams): SimulationResults {
       // Calculer une valeur par défaut qui tient compte de la franchise
       const defaultInsuranceCost = currentTotalPremium * 0.4; // Valeur par défaut basée sur un ratio S/P de 40%
       
-      // Appliquer la même logique de calcul de l'impact de la franchise
-      const potentialSavings = params.deductible * params.numberOfClaims * franchiseImpactFactor;
-      const maxSavings = defaultInsuranceCost * 0.3;
-      const actualDeductibleImpact = Math.min(potentialSavings, maxSavings);
-      const defaultAdjustedCost = Math.max(0, defaultInsuranceCost - actualDeductibleImpact);
+      // Appliquer la même logique de calcul de l'impact de la franchise selon le mode
+      let defaultDeductibleImpact = 0;
+      
+      if (params.deductibleMode === 'totalAmount' && params.totalDeductibleAmount > 0) {
+        const franchiseImpactFactor = 0.8;
+        const maxImpact = defaultInsuranceCost * 0.5;
+        defaultDeductibleImpact = Math.min(params.totalDeductibleAmount * franchiseImpactFactor, maxImpact);
+      } else {
+        const franchiseImpactFactor = 0.3;
+        const potentialSavings = params.deductible * params.numberOfClaims * franchiseImpactFactor;
+        const maxSavings = defaultInsuranceCost * 0.3;
+        defaultDeductibleImpact = Math.min(potentialSavings, maxSavings);
+      }
+      
+      const defaultAdjustedCost = Math.max(0, defaultInsuranceCost - defaultDeductibleImpact);
       
       params = {
         ...params,
@@ -205,11 +243,21 @@ export function calculateResults(params: InsuranceParams): SimulationResults {
       // Calculer une valeur par défaut qui tient compte de la franchise
       const defaultInsuranceCost = currentTotalPremium * 0.4; // Valeur par défaut basée sur un ratio S/P de 40%
       
-      // Appliquer la même logique de calcul de l'impact de la franchise
-      const potentialSavings = params.deductible * params.numberOfClaims * franchiseImpactFactor;
-      const maxSavings = defaultInsuranceCost * 0.3;
-      const actualDeductibleImpact = Math.min(potentialSavings, maxSavings);
-      const defaultAdjustedCost = Math.max(0, defaultInsuranceCost - actualDeductibleImpact);
+      // Appliquer la même logique de calcul de l'impact de la franchise selon le mode
+      let defaultDeductibleImpact = 0;
+      
+      if (params.deductibleMode === 'totalAmount' && params.totalDeductibleAmount > 0) {
+        const franchiseImpactFactor = 0.8;
+        const maxImpact = defaultInsuranceCost * 0.5;
+        defaultDeductibleImpact = Math.min(params.totalDeductibleAmount * franchiseImpactFactor, maxImpact);
+      } else {
+        const franchiseImpactFactor = 0.3;
+        const potentialSavings = params.deductible * params.numberOfClaims * franchiseImpactFactor;
+        const maxSavings = defaultInsuranceCost * 0.3;
+        defaultDeductibleImpact = Math.min(potentialSavings, maxSavings);
+      }
+      
+      const defaultAdjustedCost = Math.max(0, defaultInsuranceCost - defaultDeductibleImpact);
       
       // Appliquer l'inflation
       const defaultProjectedCost = defaultAdjustedCost * (1 + (params.inflation || 0.03));
