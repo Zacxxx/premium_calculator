@@ -10,8 +10,7 @@ export const insuranceParamsSchema = z.object({
 
   totalSurface: z
     .number()
-    .positive("La surface totale doit être positive")
-    .max(1000000, "La surface totale ne peut pas dépasser 1 000 000 m²"),
+    .positive("La surface totale doit être positive"),
 
   totalClaimAmount: z.number().nonnegative("Le montant total des sinistres ne peut pas être négatif"),
 
@@ -24,7 +23,7 @@ export const insuranceParamsSchema = z.object({
   deductible: z
     .number()
     .nonnegative("La franchise ne peut pas être négative")
-    .max(10000, "La franchise ne peut pas dépasser 10 000€"),
+    .max(10000000000, "La franchise ne peut pas dépasser 10 000 000 000€"),
 
   targetSPRatio: z.number().refine(isValidPercentage, "Le ratio S/P cible doit être compris entre 0 et 100%"),
 
@@ -93,13 +92,10 @@ export function validateBusinessRules(params: InsuranceParams): ValidationErrors
   return errors
 }
 
-export function validateParams(params: InsuranceParams): void {
+export function validateParams(params: InsuranceParams): ValidationErrors {
   const schemaErrors = validateInsuranceParams(params)
   const businessErrors = validateBusinessRules(params)
   const allErrors = { ...schemaErrors, ...businessErrors }
-
-  if (Object.keys(allErrors).length > 0) {
-    throw new Error(JSON.stringify(allErrors))
-  }
+  return allErrors
 }
 

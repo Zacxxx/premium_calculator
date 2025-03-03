@@ -98,10 +98,10 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   value={params.premiumPerSqm}
                   onChange={(value) => handleChange('premiumPerSqm', value)}
                   min={0}
-                  step={0.1}
-                  precision={2}
+                  step={0.0001}
+                  precision={4}
                   showClear
-                  formatOptions={{ style: "currency", currency: "EUR" }}
+                  formatOptions={{ style: "currency", currency: "EUR", maximumFractionDigits: 4 }}
                   error={errors.premiumPerSqm}
                   disabled={disabled}
                   required
@@ -114,6 +114,7 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   value={params.totalSurface}
                   onChange={(value) => handleChange('totalSurface', value)}
                   min={0}
+                  max={Number.MAX_SAFE_INTEGER}
                   step={10}
                   precision={0}
                   showClear
@@ -180,7 +181,7 @@ export default function InputParameters({ params, onChange, errors = {}, disable
                   value={params.deductible}
                   onChange={(value) => handleChange('deductible', value)}
                   min={0}
-                  max={10000}
+                  max={10000000000}
                   step={100}
                   precision={0}
                   showClear

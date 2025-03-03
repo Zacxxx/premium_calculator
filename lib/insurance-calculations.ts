@@ -18,6 +18,26 @@ function ensureFiniteNumber(value: number, decimals: number = 2): number {
 }
 
 export function calculateResults(params: InsuranceParams): SimulationResults {
+  /**
+   * Calcul des résultats de simulation d'assurance
+   * 
+   * Cette fonction calcule la prime d'assurance ajustée en tenant compte de plusieurs facteurs :
+   * 
+   * 1. Impact de la franchise :
+   *    - La franchise est le montant que l'assuré prend à sa charge avant l'intervention de l'assurance
+   *    - Plus la franchise est élevée, moins l'assurance aura à payer en cas de sinistre
+   *    - L'impact de la franchise est calculé avec un facteur de pondération (30%) pour refléter
+   *      le fait que tous les sinistres ne sont pas concernés de la même façon par la franchise
+   *    - L'économie réalisée grâce à la franchise est plafonnée à 30% du coût total pour l'assurance
+   * 
+   * 2. Projection des coûts futurs :
+   *    - Le coût ajusté (après prise en compte de la franchise) est projeté avec l'inflation
+   * 
+   * 3. Calcul de la prime requise :
+   *    - La prime nette est calculée pour atteindre le ratio S/P cible
+   *    - La prime totale inclut les taxes
+   *    - La prime au m² est calculée en divisant par la surface totale
+   */
   try {
     debug.group("Calculation", () => {
       debug.log("Input params:", params)
@@ -61,7 +81,10 @@ export function calculateResults(params: InsuranceParams): SimulationResults {
 
     // Validate all parameters first
     try {
-      validateParams(params);
+      const validationErrors = validateParams(params);
+      if (Object.keys(validationErrors).length > 0) {
+        debug.warn("Validation errors, proceeding with calculations anyway:", validationErrors);
+      }
     } catch (error) {
       debug.warn("Validation error, proceeding with calculations anyway:", error);
       // Continuer malgré les erreurs de validation
@@ -98,14 +121,62 @@ export function calculateResults(params: InsuranceParams): SimulationResults {
     const waterDamageDeductible = ensureFiniteNumber(safeNumberOfWaterDamageClaims * params.deductible);
     const nonWaterDamageDeductible = ensureFiniteNumber((params.numberOfClaims - safeNumberOfWaterDamageClaims) * params.deductible);
 
+    /**
+     * Calcul de l'impact de la franchise sur le coût d'assurance
+     * 
+     * Principe : La franchise est le montant que l'assuré prend à sa charge avant que l'assurance n'intervienne.
+     * Plus la franchise est élevée, moins l'assurance aura à payer en cas de sinistre.
+     * 
+     * Méthode de calcul :
+     * 1. On estime l'économie potentielle pour l'assureur grâce à la franchise
+     * 2. Cette économie est limitée à un pourcentage du coût total pour rester réaliste
+     * 3. On ajuste le coût supporté par l'assurance en conséquence
+     */
+    
+    // Calcul de l'économie potentielle due à la franchise
+    // On utilise un facteur d'impact pour modérer l'effet de la franchise (plus réaliste)
+    const franchiseImpactFactor = 0.3; // La franchise n'a pas un impact à 100% sur tous les sinistres
+    
+    // L'économie potentielle est la franchise multipliée par le nombre de sinistres, 
+    // pondérée par le facteur d'impact
+    const potentialSavings = params.deductible * params.numberOfClaims * franchiseImpactFactor;
+    
+    // On limite l'économie à un maximum de 30% du coût total supporté par l'assurance
+    // pour éviter des réductions irréalistes
+    const maxSavings = params.insuranceCompanyCost * 0.3;
+    const actualDeductibleImpact = Math.min(potentialSavings, maxSavings);
+    
+    // Calcul du coût ajusté pour l'assurance après prise en compte de la franchise
+    const adjustedInsuranceCompanyCost = Math.max(0, params.insuranceCompanyCost - actualDeductibleImpact);
+    
+    debug.log("Impact de la franchise sur le coût assurance:", {
+      originalInsuranceCost: params.insuranceCompanyCost,
+      deductible: params.deductible,
+      franchiseImpactFactor,
+      potentialSavings,
+      maxSavings,
+      actualDeductibleImpact,
+      adjustedInsuranceCompanyCost
+    });
+
     // Premium adjustments
-    if (!isFinite(params.insuranceCompanyCost) || isNaN(params.insuranceCompanyCost) || params.insuranceCompanyCost === 0) {
+    if (!isFinite(adjustedInsuranceCompanyCost) || isNaN(adjustedInsuranceCompanyCost) || adjustedInsuranceCompanyCost === 0) {
       debug.warn("Coût compagnie d'assurance invalide ou nul, utilisation d'une valeur par défaut", {
-        insuranceCompanyCost: params.insuranceCompanyCost
+        insuranceCompanyCost: adjustedInsuranceCompanyCost
       });
+      
+      // Calculer une valeur par défaut qui tient compte de la franchise
+      const defaultInsuranceCost = currentTotalPremium * 0.4; // Valeur par défaut basée sur un ratio S/P de 40%
+      
+      // Appliquer la même logique de calcul de l'impact de la franchise
+      const potentialSavings = params.deductible * params.numberOfClaims * franchiseImpactFactor;
+      const maxSavings = defaultInsuranceCost * 0.3;
+      const actualDeductibleImpact = Math.min(potentialSavings, maxSavings);
+      const defaultAdjustedCost = Math.max(0, defaultInsuranceCost - actualDeductibleImpact);
+      
       params = {
         ...params,
-        insuranceCompanyCost: currentTotalPremium * 0.4 // Valeur par défaut basée sur un ratio S/P de 40%
+        insuranceCompanyCost: defaultAdjustedCost > 0 ? defaultAdjustedCost : defaultInsuranceCost
       };
     }
     
@@ -119,11 +190,30 @@ export function calculateResults(params: InsuranceParams): SimulationResults {
       };
     }
     
-    const projectedClaimCost = ensureFiniteNumber(params.insuranceCompanyCost * (1 + params.inflation));
+    // Calcul du coût projeté des sinistres en tenant compte de l'inflation
+    const projectedClaimCost = ensureFiniteNumber(adjustedInsuranceCompanyCost * (1 + params.inflation));
+    
+    debug.log("Coût projeté des sinistres:", {
+      adjustedInsuranceCompanyCost,
+      inflation: params.inflation,
+      projectedClaimCost
+    });
     
     if (projectedClaimCost === 0) {
-      debug.warn("Coût projeté des sinistres est toujours nul après correction, utilisation d'une valeur par défaut");
-      const defaultProjectedCost = currentTotalPremium * 0.4 * 1.03; // Basé sur un ratio S/P de 40% avec 3% d'inflation
+      debug.warn("Coût projeté des sinistres est nul, utilisation d'une valeur par défaut");
+      
+      // Calculer une valeur par défaut qui tient compte de la franchise
+      const defaultInsuranceCost = currentTotalPremium * 0.4; // Valeur par défaut basée sur un ratio S/P de 40%
+      
+      // Appliquer la même logique de calcul de l'impact de la franchise
+      const potentialSavings = params.deductible * params.numberOfClaims * franchiseImpactFactor;
+      const maxSavings = defaultInsuranceCost * 0.3;
+      const actualDeductibleImpact = Math.min(potentialSavings, maxSavings);
+      const defaultAdjustedCost = Math.max(0, defaultInsuranceCost - actualDeductibleImpact);
+      
+      // Appliquer l'inflation
+      const defaultProjectedCost = defaultAdjustedCost * (1 + (params.inflation || 0.03));
+      
       const results = {
         averageCostPerClaimInsurance,
         averageCostPerClaimCustomer,

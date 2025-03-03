@@ -95,8 +95,8 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
   })
 
   const validateParams = React.useCallback(() => {
+    performanceMonitor.start("validateParams")
     try {
-      performanceMonitor.start("validateParams")
       debug.group("Parameter Validation", () => {
         debug.log("Current params:", state.params)
       })
@@ -108,7 +108,8 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
       dispatch({ type: "SET_ERRORS", payload: allErrors })
 
       if (Object.keys(allErrors).length > 0) {
-        throw new ValidationError("Validation errors detected", { errors: allErrors })
+        debug.warn("Validation errors detected:", allErrors)
+        return false
       }
 
       return true
@@ -123,7 +124,11 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
   }, [state.params])
 
   const calculateAsync = React.useCallback(async () => {
-    if (!validateParams()) return
+    const isValid = validateParams();
+    // Si la validation échoue, on affiche les erreurs mais on continue quand même
+    if (!isValid) {
+      debug.warn("Validation failed but continuing with calculation");
+    }
 
     dispatch({ type: "SET_CALCULATING", payload: true })
     performanceMonitor.start("calculation")
@@ -135,7 +140,7 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
       
       const cleanParams = {
         ...state.params,
-        premiumPerSqm: Number(state.params.premiumPerSqm.toFixed(2)),
+        premiumPerSqm: Number(state.params.premiumPerSqm.toFixed(4)),
         totalSurface: Number(state.params.totalSurface.toFixed(2)),
         insuranceCompanyCost: Number(state.params.insuranceCompanyCost.toFixed(2)),
         customerPaidCost: Number(state.params.customerPaidCost.toFixed(2)),
